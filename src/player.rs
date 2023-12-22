@@ -1,6 +1,9 @@
 use bevy::{math::vec3, prelude::*};
 
-use crate::components::{Collider, MouseWorldCoords, Movable, Velocity};
+use crate::{
+    components::{Collider, Health, MouseWorldCoords, Movable, Velocity},
+    ui::PlayerHealth,
+};
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_COLOR: Color = Color::rgb(0.5, 0.5, 0.5);
@@ -48,7 +51,8 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup_player(mut commands: Commands) {
+fn setup_player(mut commands: Commands, mut player_health: ResMut<PlayerHealth>) {
+    let initial_player_health = 10.;
     let player = commands
         .spawn((
             SpriteBundle {
@@ -61,12 +65,18 @@ fn setup_player(mut commands: Commands) {
                 ..default()
             },
             Player,
+            Health {
+                current: initial_player_health,
+                max: initial_player_health,
+            },
             Velocity(Vec2::ZERO),
             Movable {
                 move_speed: PLAYER_SPEED,
             },
         ))
         .id();
+
+    player_health.current = initial_player_health;
 
     let main_weapon = commands
         .spawn((

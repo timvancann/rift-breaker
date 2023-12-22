@@ -2,20 +2,21 @@ mod components;
 mod enemy;
 mod player;
 mod systems;
+mod ui;
 
 use bevy::prelude::*;
 use components::{MainCamera, MouseWorldCoords};
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
 use systems::{cursor_world_position, die, handle_knockback, move_all};
+use ui::PlayerHealthUIPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
         .init_resource::<MouseWorldCoords>()
-        .add_plugins(PlayerPlugin)
-        .add_plugins(EnemyPlugin)
+        .add_plugins((PlayerPlugin, EnemyPlugin, PlayerHealthUIPlugin))
         .add_systems(Startup, setup)
         .add_systems(
             Update,

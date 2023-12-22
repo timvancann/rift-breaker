@@ -15,7 +15,12 @@ pub struct MouseWorldCoords(pub Vec2);
 #[derive(Component)]
 pub struct MainCamera;
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Default)]
+pub struct Movable {
+    pub move_speed: f32,
+}
+
+#[derive(Component, Default, Deref, DerefMut)]
 pub struct Velocity(pub Vec2);
 
 #[derive(Component, Default)]

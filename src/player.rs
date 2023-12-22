@@ -1,6 +1,6 @@
 use bevy::{math::vec3, prelude::*};
 
-use crate::components::{Collider, MouseWorldCoords, Velocity};
+use crate::components::{Collider, MouseWorldCoords, Movable, Velocity};
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_COLOR: Color = Color::rgb(0.5, 0.5, 0.5);
@@ -21,7 +21,7 @@ const BULLET_SPEED: f32 = 500.0;
 const BULLET_SIZE: Vec2 = Vec2::new(5.0, 5.0);
 
 #[derive(Component)]
-struct Player;
+pub struct Player;
 
 #[derive(Component)]
 struct MainWeapon;
@@ -44,7 +44,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
             .add_systems(FixedUpdate, rotate_around_player)
-            .add_systems(Update, (move_player, fire, despawn_bullets));
+            .add_systems(Update, (player_input, fire, despawn_bullets));
     }
 }
 
@@ -62,6 +62,9 @@ fn setup_player(mut commands: Commands) {
             },
             Player,
             Velocity(Vec2::ZERO),
+            Movable {
+                move_speed: PLAYER_SPEED,
+            },
         ))
         .id();
 
@@ -102,11 +105,7 @@ fn setup_player(mut commands: Commands) {
     commands.entity(main_weapon).push_children(&[nozzle]);
 }
 
-fn move_player(
-    input: Res<Input<KeyCode>>,
-    time: Res<Time<Fixed>>,
-    mut query: Query<&mut Velocity, With<Player>>,
-) {
+fn player_input(input: Res<Input<KeyCode>>, mut query: Query<&mut Velocity, With<Player>>) {
     let mut velocity = query.single_mut();
 
     let mut vector = Vec2::ZERO;
@@ -127,7 +126,7 @@ fn move_player(
         velocity.x = 0.;
         velocity.y = 0.;
     } else {
-        let displacement = vector.normalize() * time.delta_seconds() * PLAYER_SPEED;
+        let displacement = vector.normalize() * PLAYER_SPEED;
         velocity.x = displacement.x;
         velocity.y = displacement.y;
     }
@@ -170,7 +169,6 @@ fn fire(
     q_nozzle: Query<&Transform, With<Nozzle>>,
     q_weapon: Query<&Transform, With<MainWeapon>>,
     q_player: Query<&GlobalTransform, With<Player>>,
-    time: Res<Time<Fixed>>,
 ) {
     if input.just_pressed(MouseButton::Left) {
         let nozzle = q_nozzle.single();
@@ -180,7 +178,7 @@ fn fire(
         let nozzle_position = weapon.rotation.mul_vec3(nozzle.translation).truncate()
             + player_position
             + weapon.translation.truncate();
-        let velocity = direction * BULLET_SPEED * time.delta().as_secs_f32();
+        let velocity = direction * BULLET_SPEED;
 
         commands.spawn((
             SpriteBundle {

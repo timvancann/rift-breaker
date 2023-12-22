@@ -19,10 +19,10 @@ pub fn cursor_world_position(
     }
 }
 
-pub fn move_all(mut q_movable: Query<(&mut Transform, &Velocity)>) {
+pub fn move_all(mut q_movable: Query<(&mut Transform, &Velocity)>, time: Res<Time<Fixed>>) {
     for (mut transform, velocity) in q_movable.iter_mut() {
-        transform.translation.x += velocity.x;
-        transform.translation.y += velocity.y;
+        transform.translation.x += velocity.x * time.delta().as_secs_f32();
+        transform.translation.y += velocity.y * time.delta().as_secs_f32();
     }
 }
 
@@ -36,17 +36,14 @@ pub fn die(mut commands: Commands, q_enemy: Query<(Entity, &Health)>) {
 
 pub fn handle_knockback(
     mut commands: Commands,
-    mut q_enemy: Query<(&mut Transform, &Knockback, Entity)>,
+    mut q_enemy: Query<(&Transform, &Knockback, &mut Velocity, Entity)>,
 ) {
-    for (mut transform, knockback, entity) in q_enemy.iter_mut() {
-        if knockback.velocity != Vec2::ZERO {
-            transform.translation.x += knockback.velocity.x;
-            transform.translation.y += knockback.velocity.y;
-            if (knockback.start_position - transform.translation.truncate()).length()
-                >= knockback.distance
-            {
-                commands.entity(entity).remove::<Knockback>();
-            }
+    for (transform, knockback, mut velocity, entity) in q_enemy.iter_mut() {
+        velocity.0 = knockback.velocity;
+        if (knockback.start_position - transform.translation.truncate()).length()
+            >= knockback.distance
+        {
+            commands.entity(entity).remove::<Knockback>();
         }
     }
 }

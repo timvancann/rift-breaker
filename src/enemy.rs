@@ -9,7 +9,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_enemy)
-            .add_systems(FixedUpdate, (bullet_hit_enemy));
+            .add_systems(FixedUpdate, bullet_hit_enemy);
     }
 }
 

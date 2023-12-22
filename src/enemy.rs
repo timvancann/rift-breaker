@@ -9,7 +9,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_enemy)
-            .add_systems(FixedUpdate, (bullet_hit_enemy, handle_knockback));
+            .add_systems(FixedUpdate, (bullet_hit_enemy));
     }
 }
 
@@ -29,10 +29,6 @@ fn setup_enemy(mut commands: Commands) {
         },
         Collider(ENEMY_SIZE),
         Enemy,
-        Knockback {
-            distance: 20.0,
-            ..default()
-        },
         Health {
             current: 10.,
             max: 10.,
@@ -43,11 +39,11 @@ fn setup_enemy(mut commands: Commands) {
 fn bullet_hit_enemy(
     mut commands: Commands,
     q_bullet: Query<(&Transform, Entity, &Collider, &Velocity), With<Bullet>>,
-    mut q_enemy: Query<(&Transform, &Collider, &mut Health, &mut Knockback), With<Enemy>>,
+    mut q_enemy: Query<(&Transform, &Collider, &mut Health, Entity), With<Enemy>>,
     time: Res<Time<Fixed>>,
 ) {
     for (bullet_transform, bullet_entity, bullet_collider, velocity) in q_bullet.iter() {
-        for (enemy_transform, enemy_collider, mut health, mut knockback) in q_enemy.iter_mut() {
+        for (enemy_transform, enemy_collider, mut health, entity) in q_enemy.iter_mut() {
             if let Some(_) = collide(
                 bullet_transform.translation,
                 bullet_collider.0,
@@ -56,23 +52,13 @@ fn bullet_hit_enemy(
             ) {
                 commands.entity(bullet_entity).despawn();
                 health.current -= 1.;
-                knockback.velocity = velocity.normalize() * 20. * time.delta().as_secs_f32();
-                knockback.start_position = enemy_transform.translation.truncate();
-                println!("enemy health: {}", health.current);
-            }
-        }
-    }
-}
+                let knockback = Knockback {
+                    velocity: velocity.normalize() * 20. * time.delta().as_secs_f32(),
+                    start_position: enemy_transform.translation.truncate(),
+                    distance: 10.,
+                };
 
-fn handle_knockback(mut q_enemy: Query<(&mut Transform, &mut Knockback)>) {
-    for (mut transform, mut knockback) in q_enemy.iter_mut() {
-        if knockback.velocity != Vec2::ZERO {
-            transform.translation.x += knockback.velocity.x;
-            transform.translation.y += knockback.velocity.y;
-            if (knockback.start_position - transform.translation.truncate()).length()
-                >= knockback.distance
-            {
-                knockback.velocity = Vec2::ZERO;
+                commands.entity(entity).insert(knockback);
             }
         }
     }

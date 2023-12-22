@@ -22,6 +22,7 @@ const BULLET_SIZE: Vec2 = Vec2::new(5.0, 5.0);
 
 #[derive(Component)]
 struct Player;
+
 #[derive(Component)]
 struct MainWeapon;
 
@@ -32,6 +33,7 @@ struct Nozzle;
 pub struct Bullet {
     spawn_location: Vec2,
 }
+
 #[derive(Component)]
 struct RotatableAroundPlayer {
     offset: f32,
@@ -41,7 +43,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
-            .add_systems(FixedUpdate, (rotate_around_player))
+            .add_systems(FixedUpdate, rotate_around_player)
             .add_systems(Update, (move_player, fire, despawn_bullets));
     }
 }

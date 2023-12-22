@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use components::{MainCamera, MouseWorldCoords};
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
-use systems::{cursor_world_position, die, move_all};
+use systems::{cursor_world_position, die, handle_knockback, move_all};
 
 fn main() {
     App::new()
@@ -21,7 +21,7 @@ fn main() {
             Update,
             (bevy::window::close_on_esc, cursor_world_position, die),
         )
-        .add_systems(FixedUpdate, (move_all,))
+        .add_systems(FixedUpdate, (move_all, handle_knockback))
         .run();
 }
 

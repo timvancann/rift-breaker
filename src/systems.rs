@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::components::{Health, MainCamera, MouseWorldCoords, Velocity};
+use crate::components::{Health, Knockback, MainCamera, MouseWorldCoords, Velocity};
 
 pub fn cursor_world_position(
     mut coords: ResMut<MouseWorldCoords>,
@@ -30,6 +30,23 @@ pub fn die(mut commands: Commands, q_enemy: Query<(Entity, &Health)>) {
     for (entity, health) in q_enemy.iter() {
         if health.current <= 0. {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+pub fn handle_knockback(
+    mut commands: Commands,
+    mut q_enemy: Query<(&mut Transform, &Knockback, Entity)>,
+) {
+    for (mut transform, knockback, entity) in q_enemy.iter_mut() {
+        if knockback.velocity != Vec2::ZERO {
+            transform.translation.x += knockback.velocity.x;
+            transform.translation.y += knockback.velocity.y;
+            if (knockback.start_position - transform.translation.truncate()).length()
+                >= knockback.distance
+            {
+                commands.entity(entity).remove::<Knockback>();
+            }
         }
     }
 }

@@ -4,6 +4,8 @@ Rift Breaker is an open source game created in [Rust](https://www.rust-lang.org/
 
 It is intented as learning resources for myself and potentially other like-minded individuals attempting to learn Rust and Bevy.
 
+Your goal as player: defend against waves of monsters emerging from interdimensional rifts.
+
 
 <div style="text-align:center">
 <img src="assets/logo.png" alt="drawing" width="400"/>

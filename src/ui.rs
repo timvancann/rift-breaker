@@ -1,17 +1,13 @@
 use bevy::prelude::*;
 
-#[derive(Resource, Default, Clone, Copy)]
-pub struct PlayerHealth {
-    pub current: f32,
-}
+use crate::{components::Health, player::Player};
 
 #[derive(Component)]
 pub struct PlayerHealthUIPlugin;
 
 impl Plugin for PlayerHealthUIPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PlayerHealth>()
-            .add_systems(Startup, setup_ui)
+        app.add_systems(Startup, setup_ui)
             .add_systems(Update, update_ui);
     }
 }
@@ -40,8 +36,11 @@ fn setup_ui(mut commands: Commands) {
     }),));
 }
 
-fn update_ui(player_health: Res<PlayerHealth>, mut q: Query<&mut Text>) {
-    for mut text in q.iter_mut() {
-        text.sections[1].value = player_health.current.to_string();
+fn update_ui(
+    q_player_health: Query<&Health, With<Player>>,
+    mut q_text: Query<&mut Text, With<Text>>,
+) {
+    for mut text in q_text.iter_mut() {
+        text.sections[1].value = q_player_health.single().current.to_string();
     }
 }

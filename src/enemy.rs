@@ -15,7 +15,7 @@ impl Plugin for EnemyPlugin {
 }
 
 #[derive(Component)]
-struct Enemy;
+pub struct Enemy;
 
 fn setup_enemy(mut commands: Commands) {
     commands.spawn((

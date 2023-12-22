@@ -1,8 +1,8 @@
-use bevy::{math::vec3, prelude::*};
+use bevy::{math::vec3, prelude::*, sprite::collide_aabb::collide};
 
 use crate::{
     components::{Collider, Health, MouseWorldCoords, Movable, Velocity},
-    ui::PlayerHealth,
+    enemy::Enemy,
 };
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
@@ -42,16 +42,29 @@ struct RotatableAroundPlayer {
     offset: f32,
 }
 
+#[derive(Component)]
+struct Invulnerable {
+    timer: f32,
+}
+
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
-            .add_systems(FixedUpdate, rotate_around_player)
-            .add_systems(Update, (player_input, fire, despawn_bullets));
+            .add_systems(FixedUpdate, (rotate_around_player, enemy_hits_player))
+            .add_systems(
+                Update,
+                (
+                    player_input,
+                    fire,
+                    despawn_bullets,
+                    countdown_invulnerability,
+                ),
+            );
     }
 }
 
-fn setup_player(mut commands: Commands, mut player_health: ResMut<PlayerHealth>) {
+fn setup_player(mut commands: Commands) {
     let initial_player_health = 10.;
     let player = commands
         .spawn((
@@ -69,14 +82,13 @@ fn setup_player(mut commands: Commands, mut player_health: ResMut<PlayerHealth>)
                 current: initial_player_health,
                 max: initial_player_health,
             },
+            Collider(PLAYER_SIZE),
             Velocity(Vec2::ZERO),
             Movable {
                 move_speed: PLAYER_SPEED,
             },
         ))
         .id();
-
-    player_health.current = initial_player_health;
 
     let main_weapon = commands
         .spawn((
@@ -213,6 +225,42 @@ fn despawn_bullets(mut commands: Commands, q_bullet: Query<(&Transform, Entity, 
     for (transform, entity, bullet) in q_bullet.iter() {
         if (bullet.spawn_location - transform.translation.truncate()).length() > WEAPON_RANGE {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn countdown_invulnerability(
+    mut commands: Commands,
+    mut q_player: Query<(&mut Invulnerable, Entity)>,
+    time: Res<Time>,
+) {
+    for (mut invulnerable, entity) in q_player.iter_mut() {
+        invulnerable.timer -= time.delta().as_secs_f32();
+        if invulnerable.timer <= 0. {
+            commands.entity(entity).remove::<Invulnerable>();
+        }
+    }
+}
+
+fn enemy_hits_player(
+    mut commands: Commands,
+    mut q_player: Query<
+        (&Transform, &Collider, &mut Health, Entity),
+        (With<Player>, Without<Invulnerable>),
+    >,
+    q_enemy: Query<(&Transform, &Collider), With<Enemy>>,
+) {
+    for (player_transform, player_collider, mut player_health, entity) in q_player.iter_mut() {
+        for (enemy_transform, enemy_collider) in q_enemy.iter() {
+            if let Some(_) = collide(
+                player_transform.translation,
+                player_collider.0,
+                enemy_transform.translation,
+                enemy_collider.0,
+            ) {
+                player_health.current -= 1.;
+                commands.entity(entity).insert(Invulnerable { timer: 1. });
+            }
         }
     }
 }

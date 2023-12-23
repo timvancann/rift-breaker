@@ -8,11 +8,20 @@ use crate::{
 const ENEMY_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const ENEMY_HEALTH: f32 = 2.;
 
+const MAX_ENEMY_DISTANCE: f32 = 2000.0;
+
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (move_towards_player_when_not_knockback, die))
-            .add_systems(FixedUpdate, bullet_hit_enemy);
+        app.add_systems(
+            Update,
+            (
+                move_towards_player_when_not_knockback,
+                die,
+                despawn_far_away_enemies,
+            ),
+        )
+        .add_systems(FixedUpdate, bullet_hit_enemy);
     }
 }
 
@@ -100,6 +109,19 @@ fn die(
         if health.current <= 0. {
             commands.entity(entity).despawn();
             score.0 += 1;
+        }
+    }
+}
+
+fn despawn_far_away_enemies(
+    mut commands: Commands,
+    q_player_transform: Query<&Transform, With<Player>>,
+    q_enemy: Query<(&Transform, Entity), With<Enemy>>,
+) {
+    let player_position = q_player_transform.single().translation.truncate();
+    for (transform, entity) in q_enemy.iter() {
+        if (transform.translation.length() - player_position).length() > MAX_ENEMY_DISTANCE {
+            commands.entity(entity).despawn();
         }
     }
 }

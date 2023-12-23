@@ -3,11 +3,11 @@ use rand::prelude::*;
 use rand_distr::{Distribution, UnitCircle};
 use std::time::Duration;
 
-use crate::enemy::prepare_enemy;
+use crate::{enemy::prepare_enemy, player::Player};
 
 const RIFT_COLOR: Color = Color::PURPLE;
 const RIFT_SIZE: Vec2 = Vec2::new(100.0, 100.0);
-const RIFT_SPAWN_RADIUS: f32 = 300.0;
+const RIFT_SPAWN_RADIUS: f32 = 500.0;
 
 #[derive(Component)]
 pub struct RiftPlugin;
@@ -36,7 +36,7 @@ struct EnemySpawnConfig {
 
 fn setup_rift_spawning(mut commands: Commands) {
     commands.insert_resource(RiftSpawnConfig {
-        timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
+        timer: Timer::new(Duration::from_secs(4), TimerMode::Repeating),
     })
 }
 
@@ -46,12 +46,17 @@ fn random_point_on_unit_circle(radius: f32) -> Vec2 {
     Vec2::new(point[0], point[1]) * radius
 }
 
-fn spawn_rift(mut commands: Commands, time: Res<Time>, mut config: ResMut<RiftSpawnConfig>) {
+fn spawn_rift(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut config: ResMut<RiftSpawnConfig>,
+    q_player_transform: Query<&Transform, With<Player>>,
+) {
     config.timer.tick(time.delta());
+    let player_position = q_player_transform.single().translation.truncate();
 
     if config.timer.finished() {
-        let random_point_on_circle = random_point_on_unit_circle(RIFT_SPAWN_RADIUS);
-        println!("Spawning rift at {:?}", random_point_on_circle);
+        let random_spawn_point = player_position + random_point_on_unit_circle(RIFT_SPAWN_RADIUS);
 
         commands.spawn((
             SpriteBundle {
@@ -60,11 +65,7 @@ fn spawn_rift(mut commands: Commands, time: Res<Time>, mut config: ResMut<RiftSp
                     custom_size: Some(RIFT_SIZE),
                     ..default()
                 },
-                transform: Transform::from_xyz(
-                    random_point_on_circle.x,
-                    random_point_on_circle.y,
-                    0.0,
-                ),
+                transform: Transform::from_xyz(random_spawn_point.x, random_spawn_point.y, 0.0),
                 ..default()
             },
             Rift {

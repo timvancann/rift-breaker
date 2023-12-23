@@ -120,7 +120,7 @@ fn despawn_far_away_enemies(
 ) {
     let player_position = q_player_transform.single().translation.truncate();
     for (transform, entity) in q_enemy.iter() {
-        if (transform.translation.length() - player_position).length() > MAX_ENEMY_DISTANCE {
+        if (transform.translation.truncate() - player_position).length() > MAX_ENEMY_DISTANCE {
             commands.entity(entity).despawn();
         }
     }

@@ -3,6 +3,7 @@ use bevy::{prelude::*, sprite::collide_aabb::collide};
 use crate::{
     components::{Collider, Health, Knockback, Movable, Velocity},
     player::{Bullet, Player},
+    ui::Score,
 };
 const ENEMY_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const ENEMY_HEALTH: f32 = 2.;
@@ -10,7 +11,7 @@ const ENEMY_HEALTH: f32 = 2.;
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, move_towards_player_when_not_knockback)
+        app.add_systems(Update, (move_towards_player_when_not_knockback, die))
             .add_systems(FixedUpdate, bullet_hit_enemy);
     }
 }
@@ -87,5 +88,18 @@ fn move_towards_player_when_not_knockback(
             - enemy_transform.translation.truncate())
         .normalize();
         velocity.0 = direction * movable.move_speed;
+    }
+}
+
+fn die(
+    mut commands: Commands,
+    q_enemy: Query<(Entity, &Health), With<Enemy>>,
+    mut score: ResMut<Score>,
+) {
+    for (entity, health) in q_enemy.iter() {
+        if health.current <= 0. {
+            commands.entity(entity).despawn();
+            score.0 += 1;
+        }
     }
 }

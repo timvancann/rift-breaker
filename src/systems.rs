@@ -26,14 +26,6 @@ pub fn move_all(mut q_movable: Query<(&mut Transform, &Velocity)>, time: Res<Tim
     }
 }
 
-pub fn die(mut commands: Commands, q_enemy: Query<(Entity, &Health)>) {
-    for (entity, health) in q_enemy.iter() {
-        if health.current <= 0. {
-            commands.entity(entity).despawn();
-        }
-    }
-}
-
 pub fn handle_knockback(
     mut commands: Commands,
     mut q_enemy: Query<(&Transform, &Knockback, &mut Velocity, Entity)>,

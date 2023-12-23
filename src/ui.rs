@@ -3,61 +3,106 @@ use bevy::prelude::*;
 use crate::player::PlayerHealthChanged;
 
 #[derive(Component)]
-pub struct PlayerHealthUIPlugin;
+pub struct UIPlugin;
 
-impl Plugin for PlayerHealthUIPlugin {
+impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_ui)
+        app.add_systems(Startup, (setup_player_health, setup_score_board))
             .add_event::<PlayerHealthChanged>()
-            .add_systems(Update, update_ui);
+            .add_systems(Update, (update_player_health_ui, update_score_ui));
     }
 }
 
-fn setup_ui(mut commands: Commands) {
-    commands.spawn((TextBundle::from_sections([
-        TextSection::new(
-            "Health: ",
-            TextStyle {
+#[derive(Resource, Default)]
+pub struct Score(pub i32);
+
+#[derive(Component)]
+struct PlayerHealthUI;
+
+#[derive(Component)]
+struct ScoreUI;
+
+fn setup_player_health(mut commands: Commands) {
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Health: ",
+                TextStyle {
+                    font_size: 40.,
+                    color: Color::BLACK,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
                 font_size: 40.,
-                color: Color::BLACK,
+                color: Color::ORANGE_RED,
                 ..default()
-            },
-        ),
-        TextSection::from_style(TextStyle {
-            font_size: 40.,
-            color: Color::ORANGE_RED,
+            }),
+            TextSection::new(
+                " / ",
+                TextStyle {
+                    font_size: 40.,
+                    color: Color::BLACK,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font_size: 40.,
+                color: Color::ORANGE_RED,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Px(5.0),
             ..default()
         }),
-        TextSection::new(
-            " / ",
-            TextStyle {
-                font_size: 40.,
-                color: Color::BLACK,
-                ..default()
-            },
-        ),
-        TextSection::from_style(TextStyle {
-            font_size: 40.,
-            color: Color::ORANGE_RED,
-            ..default()
-        }),
-    ])
-    .with_style(Style {
-        position_type: PositionType::Absolute,
-        top: Val::Px(5.0),
-        left: Val::Px(5.0),
-        ..default()
-    }),));
+        PlayerHealthUI,
+    ));
 }
 
-fn update_ui(
+fn setup_score_board(mut commands: Commands) {
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Score ",
+                TextStyle {
+                    font_size: 40.,
+                    color: Color::BLACK,
+                    ..default()
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font_size: 40.,
+                color: Color::DARK_GREEN,
+                ..default()
+            }),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            right: Val::Px(5.0),
+            ..default()
+        }),
+        ScoreUI,
+    ));
+}
+
+fn update_player_health_ui(
     mut ev_player_health: EventReader<PlayerHealthChanged>,
-    mut q_text: Query<&mut Text, With<Text>>,
+    mut q_text: Query<&mut Text, With<PlayerHealthUI>>,
 ) {
-    for mut ev in ev_player_health.read() {
+    for ev in ev_player_health.read() {
         for mut text in q_text.iter_mut() {
             text.sections[1].value = ev.current.to_string();
             text.sections[3].value = ev.max.to_string();
         }
+    }
+}
+
+fn update_score_ui(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreUI>>) {
+    for mut text in q_text.iter_mut() {
+        text.sections[1].value = score.0.to_string();
     }
 }

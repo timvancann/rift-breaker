@@ -8,8 +8,7 @@ const ENEMY_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_enemy)
-            .add_systems(Update, move_towards_player_when_not_knockback)
+        app.add_systems(Update, move_towards_player_when_not_knockback)
             .add_systems(FixedUpdate, bullet_hit_enemy);
     }
 }
@@ -17,26 +16,36 @@ impl Plugin for EnemyPlugin {
 #[derive(Component)]
 pub struct Enemy;
 
-fn setup_enemy(mut commands: Commands) {
-    commands.spawn((
-        SpriteBundle {
+#[derive(Bundle)]
+pub struct EnemyBundle {
+    sprite: SpriteBundle,
+    collider: Collider,
+    enemy: Enemy,
+    health: Health,
+    velocity: Velocity,
+    movable: Movable,
+}
+
+pub fn prepare_enemy(location: &Vec2) -> EnemyBundle {
+    EnemyBundle {
+        sprite: SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.3, 0.3, 0.3),
                 custom_size: Some(ENEMY_SIZE),
                 ..default()
             },
-            transform: Transform::from_xyz(200.0, 100.0, 0.0),
+            transform: Transform::from_xyz(location.x, location.y, 0.),
             ..default()
         },
-        Collider(ENEMY_SIZE),
-        Enemy,
-        Health {
+        collider: Collider(ENEMY_SIZE),
+        enemy: Enemy,
+        health: Health {
             current: 10.,
             max: 10.,
         },
-        Velocity(Vec2::ZERO),
-        Movable { move_speed: 100. },
-    ));
+        velocity: Velocity(Vec2::ZERO),
+        movable: Movable { move_speed: 100. },
+    }
 }
 
 fn bullet_hit_enemy(

@@ -1,6 +1,7 @@
 mod components;
 mod enemy;
 mod player;
+mod rift;
 mod systems;
 mod ui;
 
@@ -8,6 +9,7 @@ use bevy::prelude::*;
 use components::{MainCamera, MouseWorldCoords};
 use enemy::EnemyPlugin;
 use player::PlayerPlugin;
+use rift::RiftPlugin;
 use systems::{cursor_world_position, die, handle_knockback, move_all};
 use ui::PlayerHealthUIPlugin;
 
@@ -16,7 +18,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
         .init_resource::<MouseWorldCoords>()
-        .add_plugins((PlayerPlugin, EnemyPlugin, PlayerHealthUIPlugin))
+        .add_plugins((PlayerPlugin, EnemyPlugin, PlayerHealthUIPlugin, RiftPlugin))
         .add_systems(Startup, setup)
         .add_systems(
             Update,

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{math::vec3, prelude::*, sprite::collide_aabb::collide};
 
 use crate::{
@@ -44,7 +46,7 @@ struct RotatableAroundPlayer {
 
 #[derive(Component)]
 struct Invulnerable {
-    timer: f32,
+    timer: Timer,
 }
 
 pub struct PlayerPlugin;
@@ -235,8 +237,8 @@ fn countdown_invulnerability(
     time: Res<Time>,
 ) {
     for (mut invulnerable, entity) in q_player.iter_mut() {
-        invulnerable.timer -= time.delta().as_secs_f32();
-        if invulnerable.timer <= 0. {
+        invulnerable.timer.tick(time.delta());
+        if invulnerable.timer.finished() {
             commands.entity(entity).remove::<Invulnerable>();
         }
     }
@@ -259,7 +261,9 @@ fn enemy_hits_player(
                 enemy_collider.0,
             ) {
                 player_health.current -= 1.;
-                commands.entity(entity).insert(Invulnerable { timer: 1. });
+                commands.entity(entity).insert(Invulnerable {
+                    timer: Timer::new(Duration::from_secs(1), TimerMode::Once),
+                });
             }
         }
     }

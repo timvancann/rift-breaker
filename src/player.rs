@@ -66,7 +66,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup_player(mut commands: Commands) {
+fn setup_player(mut commands: Commands, mut ev_player_health: EventWriter<PlayerHealthChanged>) {
     let initial_player_health = 10.;
     let player = commands
         .spawn((
@@ -91,6 +91,11 @@ fn setup_player(mut commands: Commands) {
             },
         ))
         .id();
+
+    ev_player_health.send(PlayerHealthChanged {
+        current: initial_player_health,
+        max: initial_player_health,
+    });
 
     let main_weapon = commands
         .spawn((
@@ -244,6 +249,12 @@ fn countdown_invulnerability(
     }
 }
 
+#[derive(Event)]
+pub struct PlayerHealthChanged {
+    pub current: f32,
+    pub max: f32,
+}
+
 fn enemy_hits_player(
     mut commands: Commands,
     mut q_player: Query<
@@ -251,6 +262,7 @@ fn enemy_hits_player(
         (With<Player>, Without<Invulnerable>),
     >,
     q_enemy: Query<(&Transform, &Collider), With<Enemy>>,
+    mut ev_player_health: EventWriter<PlayerHealthChanged>,
 ) {
     for (player_transform, player_collider, mut player_health, entity) in q_player.iter_mut() {
         for (enemy_transform, enemy_collider) in q_enemy.iter() {
@@ -261,9 +273,14 @@ fn enemy_hits_player(
                 enemy_collider.0,
             ) {
                 player_health.current -= 1.;
+                ev_player_health.send(PlayerHealthChanged {
+                    current: player_health.current,
+                    max: player_health.max,
+                });
                 commands.entity(entity).insert(Invulnerable {
                     timer: Timer::new(Duration::from_secs(1), TimerMode::Once),
                 });
+                return;
             }
         }
     }

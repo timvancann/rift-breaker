@@ -5,6 +5,8 @@ use crate::{
     player::{Bullet, Player},
 };
 const ENEMY_SIZE: Vec2 = Vec2::new(50.0, 50.0);
+const ENEMY_HEALTH: f32 = 2.;
+
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
@@ -40,8 +42,8 @@ pub fn prepare_enemy(location: &Vec2) -> EnemyBundle {
         collider: Collider(ENEMY_SIZE),
         enemy: Enemy,
         health: Health {
-            current: 10.,
-            max: 10.,
+            current: ENEMY_HEALTH,
+            max: ENEMY_HEALTH,
         },
         velocity: Velocity(Vec2::ZERO),
         movable: Movable { move_speed: 100. },

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::components::{Health, Knockback, MainCamera, MouseWorldCoords, Velocity};
+use crate::components::{Knockback, MainCamera, MouseWorldCoords, Velocity};
 
 pub fn cursor_world_position(
     mut coords: ResMut<MouseWorldCoords>,

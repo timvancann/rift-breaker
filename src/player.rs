@@ -6,6 +6,8 @@ use crate::{
     components::{Collider, Health, MouseWorldCoords, Movable, Velocity},
     enemy::Enemy,
 };
+use crate::components::XpGem;
+use crate::resources::XP;
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_COLOR: Color = Color::rgb(0.5, 0.5, 0.5);
@@ -18,12 +20,13 @@ const MAIN_WEAPON_POSITION: f32 = PLAYER_SIZE.x + MAIN_WEAPON_OFFSET;
 
 const WEAPON_NOZZLE_SIZE: Vec2 = Vec2::new(5.0, 5.0);
 const WEAPON_NOZZLE_COLOR: Color = Color::rgb(0.7, 0.7, 0.7);
-const WEAPON_NOZZLE_OFFSET: f32 = 1.;
-const WEAPON_NOZZLE_POSITION: f32 = MAIN_WEAPON_POSITION + WEAPON_NOZZLE_OFFSET;
+const WEAPON_NOZZLE_POSITION: f32 = MAIN_WEAPON_POSITION;
 const WEAPON_RANGE: f32 = 700.0;
 
 const BULLET_SPEED: f32 = 500.0;
 const BULLET_SIZE: Vec2 = Vec2::new(5.0, 5.0);
+
+const PICKUP_RADIUS: f32 = 75.0;
 
 #[derive(Component)]
 pub struct Player;
@@ -50,6 +53,7 @@ struct Invulnerable {
 }
 
 pub struct PlayerPlugin;
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_player)
@@ -61,6 +65,7 @@ impl Plugin for PlayerPlugin {
                     fire,
                     despawn_bullets,
                     countdown_invulnerability,
+                    pickup_xp_gem
                 ),
             );
     }
@@ -282,6 +287,21 @@ fn enemy_hits_player(
                 });
                 return;
             }
+        }
+    }
+}
+
+fn pickup_xp_gem(
+    mut commands: Commands,
+    q_player: Query<&Transform, With<Player>>,
+    q_xp_gem: Query<(&Transform, Entity, &XpGem)>,
+    mut xp: ResMut<XP>,
+) {
+    let player_position = q_player.single().translation.truncate();
+    for (transform, entity, gem) in q_xp_gem.iter() {
+        if (player_position - transform.translation.truncate()).length() < PICKUP_RADIUS {
+            commands.entity(entity).despawn();
+            xp.0 += gem.0;
         }
     }
 }

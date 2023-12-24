@@ -5,6 +5,7 @@ mod player;
 mod rift;
 mod systems;
 mod ui;
+mod resources;
 
 use bevy::prelude::*;
 use components::{MainCamera, MouseWorldCoords};
@@ -14,6 +15,7 @@ use player::{Player, PlayerPlugin};
 use rift::RiftPlugin;
 use systems::{cursor_world_position, handle_knockback, move_all};
 use ui::{Score, UIPlugin};
+use crate::resources::XP;
 
 fn main() {
     App::new()
@@ -21,7 +23,8 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
         .init_resource::<MouseWorldCoords>()
         .init_resource::<Score>()
-        .add_plugins((PlayerPlugin, EnemyPlugin, UIPlugin, RiftPlugin, MapPlugin))
+        .init_resource::<XP>()
+        .add_plugins((PlayerPlugin, EnemyPlugin, UIPlugin, RiftPlugin))
         .add_systems(Startup, setup)
         .add_systems(Update, (bevy::window::close_on_esc, cursor_world_position))
         .add_systems(FixedUpdate, (move_all, handle_knockback))

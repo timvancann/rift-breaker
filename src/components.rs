@@ -29,3 +29,6 @@ pub struct Knockback {
     pub start_position: Vec2,
     pub distance: f32,
 }
+
+#[derive(Component)]
+pub struct XpGem(pub f32);

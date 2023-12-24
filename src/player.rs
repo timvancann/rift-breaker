@@ -185,7 +185,7 @@ fn rotate_around_player(
 ) {
     for (mut transform, rotatable) in q_rotatables.iter_mut() {
         let player_position = player_position(&q_player);
-        if (mouse_world_coords.0 - player_position).length() < rotatable.offset {
+        if (mouse_world_coords.0 - player_position).length() < 10. {
             continue;
         }
 

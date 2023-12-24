@@ -77,7 +77,7 @@ pub fn prepare_enemy(location: &Vec2) -> EnemyBundle {
         sprite: SpriteBundle {
             transform: Transform::from_xyz(location.x, location.y, 0.),
             sprite: Sprite {
-                color: Color::rgb(0.3, 0.3, 0.3),
+                color: Color::ORANGE_RED,
                 custom_size: Some(ENEMY_SIZE),
                 ..default()
             },

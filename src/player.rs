@@ -10,17 +10,17 @@ use crate::components::XpGem;
 use crate::resources::XP;
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
-const PLAYER_COLOR: Color = Color::rgb(0.5, 0.5, 0.5);
+const PLAYER_COLOR: Color = Color::YELLOW_GREEN;
 const PLAYER_SPEED: f32 = 300.0;
 
 const MAIN_WEAPON_SIZE: Vec2 = Vec2::new(30.0, 10.0);
 const MAIN_WEAPON_COLOR: Color = Color::rgb(0.7, 0.3, 0.7);
-const MAIN_WEAPON_OFFSET: f32 = 10.;
+const MAIN_WEAPON_OFFSET: f32 = 2.;
 const MAIN_WEAPON_POSITION: f32 = PLAYER_SIZE.x + MAIN_WEAPON_OFFSET;
 
 const WEAPON_NOZZLE_SIZE: Vec2 = Vec2::new(5.0, 5.0);
 const WEAPON_NOZZLE_COLOR: Color = Color::rgb(0.7, 0.7, 0.7);
-const WEAPON_NOZZLE_POSITION: f32 = MAIN_WEAPON_POSITION;
+const WEAPON_NOZZLE_POSITION: f32 = MAIN_WEAPON_SIZE.x / 2. + 5.;
 const WEAPON_RANGE: f32 = 700.0;
 
 const BULLET_SPEED: f32 = 500.0;

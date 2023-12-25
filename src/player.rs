@@ -33,8 +33,17 @@ const PICKUP_RADIUS: f32 = 75.0;
 #[derive(Component)]
 pub struct Player;
 
+enum WeaponFireType {
+    Primary,
+    Secondary,
+    Passive,
+}
+
 #[derive(Component)]
-struct MainWeapon;
+struct Weapon {
+    cooldown_timer: Timer,
+    weapon_fire_type: WeaponFireType,
+}
 
 #[derive(Component)]
 struct Nozzle;
@@ -67,10 +76,11 @@ impl Plugin for PlayerPlugin {
                 Update,
                 (
                     player_input,
-                    fire,
+                    fire_main,
                     despawn_bullets,
                     countdown_invulnerability,
                     pickup_xp_gem,
+                    tick_weapon_cooldown,
                 )
                     .run_if(in_state(InGame)),
             );
@@ -122,7 +132,10 @@ fn setup_player(mut commands: Commands, mut ev_player_health: EventWriter<Player
             RotatableAroundPlayer {
                 offset: MAIN_WEAPON_POSITION,
             },
-            MainWeapon,
+            Weapon {
+                cooldown_timer: Timer::new(Duration::from_millis(100), TimerMode::Once),
+                weapon_fire_type: WeaponFireType::Primary,
+            },
         ))
         .id();
 
@@ -203,21 +216,28 @@ fn rotate_around_player(
     }
 }
 
-fn fire(
+fn fire_main(
     mut commands: Commands,
     input: Res<Input<MouseButton>>,
     q_nozzle: Query<&Transform, With<Nozzle>>,
-    q_weapon: Query<&Transform, With<MainWeapon>>,
+    mut q_weapon: Query<(&Transform, &mut Weapon)>,
     q_player: Query<&GlobalTransform, With<Player>>,
 ) {
-    if input.just_pressed(MouseButton::Left) {
+    for (transform, mut weapon) in q_weapon.iter_mut() {
+        if !(weapon.cooldown_timer.finished() || weapon.cooldown_timer.paused()) {
+            continue;
+        }
+
+        if !input.just_pressed(MouseButton::Left) {
+            continue;
+        }
+
         let nozzle = q_nozzle.single();
-        let weapon = q_weapon.single();
         let player_position = player_position(&q_player);
-        let direction = weapon.translation.truncate().normalize();
-        let nozzle_position = weapon.rotation.mul_vec3(nozzle.translation).truncate()
+        let direction = transform.translation.truncate().normalize();
+        let nozzle_position = transform.rotation.mul_vec3(nozzle.translation).truncate()
             + player_position
-            + weapon.translation.truncate();
+            + transform.translation.truncate();
         let velocity = direction * BULLET_SPEED;
 
         commands.spawn((
@@ -236,6 +256,8 @@ fn fire(
             },
             Collider(BULLET_SIZE),
         ));
+
+        weapon.cooldown_timer.reset();
     }
 }
 
@@ -293,6 +315,13 @@ fn enemy_hits_player(
                 return;
             }
         }
+    }
+}
+
+fn tick_weapon_cooldown(mut q_weapon: Query<&mut Weapon>,
+                        time: Res<Time>) {
+    for mut weapon in q_weapon.iter_mut() {
+        weapon.cooldown_timer.tick(time.delta());
     }
 }
 

@@ -1,5 +1,4 @@
 mod game_over;
-mod in_game;
 mod main_menu;
 
 use crate::resources::AppState;

@@ -1,16 +1,23 @@
 use bevy::prelude::*;
 
-use crate::player::PlayerHealthChanged;
-use crate::resources::XP;
+use crate::events::PlayerHealthChanged;
+use crate::resources::{AppState, XP};
 
 #[derive(Component)]
 pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (setup_player_health, setup_score_board, setup_xp_ui))
-            .add_event::<PlayerHealthChanged>()
-            .add_systems(Update, (update_player_health_ui, update_score_ui, update_xp_ui));
+        app.add_systems(
+            OnEnter(AppState::InGame),
+            (setup_player_health, setup_score_board, setup_xp_ui),
+        )
+        .add_event::<PlayerHealthChanged>()
+        .add_systems(
+            Update,
+            (update_player_health_ui, update_score_ui, update_xp_ui)
+                .run_if(in_state(AppState::InGame)),
+        );
     }
 }
 
@@ -56,12 +63,12 @@ fn setup_player_health(mut commands: Commands) {
                 ..default()
             }),
         ])
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(5.0),
-                left: Val::Px(5.0),
-                ..default()
-            }),
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Px(5.0),
+            ..default()
+        }),
         PlayerHealthUI,
     ));
 }
@@ -83,12 +90,12 @@ fn setup_score_board(mut commands: Commands) {
                 ..default()
             }),
         ])
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(5.0),
-                right: Val::Px(5.0),
-                ..default()
-            }),
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            right: Val::Px(5.0),
+            ..default()
+        }),
         ScoreUI,
     ));
 }
@@ -110,12 +117,12 @@ fn setup_xp_ui(mut commands: Commands) {
                 ..default()
             }),
         ])
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                bottom: Val::Px(5.0),
-                left: Val::Px(5.0),
-                ..default()
-            }),
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(5.0),
+            left: Val::Px(5.0),
+            ..default()
+        }),
         XpUI,
     ));
 }
@@ -138,10 +145,7 @@ fn update_score_ui(score: Res<Score>, mut q_text: Query<&mut Text, With<ScoreUI>
     }
 }
 
-fn update_xp_ui(
-    mut q_text: Query<&mut Text, With<XpUI>>,
-    xp: Res<XP>,
-) {
+fn update_xp_ui(mut q_text: Query<&mut Text, With<XpUI>>, xp: Res<XP>) {
     for mut text in q_text.iter_mut() {
         text.sections[1].value = xp.0.to_string();
     }

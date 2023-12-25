@@ -1,21 +1,24 @@
 mod components;
 mod enemy;
+
 mod map;
 mod player;
+mod resources;
 mod rift;
+mod scenes;
 mod systems;
 mod ui;
-mod resources;
+mod events;
 
+use crate::resources::XP;
 use bevy::prelude::*;
 use components::{MainCamera, MouseWorldCoords};
 use enemy::EnemyPlugin;
-use map::MapPlugin;
 use player::{Player, PlayerPlugin};
+use resources::AppState;
 use rift::RiftPlugin;
 use systems::{cursor_world_position, handle_knockback, move_all};
 use ui::{Score, UIPlugin};
-use crate::resources::XP;
 
 fn main() {
     App::new()
@@ -24,11 +27,27 @@ fn main() {
         .init_resource::<MouseWorldCoords>()
         .init_resource::<Score>()
         .init_resource::<XP>()
-        .add_plugins((PlayerPlugin, EnemyPlugin, UIPlugin, RiftPlugin))
+        .add_plugins((
+            PlayerPlugin,
+            EnemyPlugin,
+            UIPlugin,
+            RiftPlugin,
+            crate::scenes::ScenesPlugin,
+        ))
         .add_systems(Startup, setup)
-        .add_systems(Update, (bevy::window::close_on_esc, cursor_world_position))
-        .add_systems(FixedUpdate, (move_all, handle_knockback))
-        .add_systems(PostUpdate, camer_follow_player)
+        .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(
+            Update,
+            cursor_world_position.run_if(in_state(AppState::InGame)),
+        )
+        .add_systems(
+            FixedUpdate,
+            (move_all, handle_knockback).run_if(in_state(AppState::InGame)),
+        )
+        .add_systems(
+            PostUpdate,
+            camer_follow_player.run_if(in_state(AppState::InGame)),
+        )
         .run();
 }
 

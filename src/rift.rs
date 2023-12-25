@@ -3,6 +3,7 @@ use rand::prelude::*;
 use rand_distr::{Distribution, UnitCircle};
 use std::time::Duration;
 
+use crate::resources::AppState::InGame;
 use crate::{enemy::prepare_enemy, player::Player};
 
 const RIFT_COLOR: Color = Color::PURPLE;
@@ -14,8 +15,11 @@ pub struct RiftPlugin;
 
 impl Plugin for RiftPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_rift_spawning)
-            .add_systems(Update, (spawn_rift, spawn_enemies, destroy_rift));
+        app.add_systems(OnEnter(InGame), setup_rift_spawning)
+            .add_systems(
+                Update,
+                (spawn_rift, spawn_enemies, destroy_rift).run_if(in_state(InGame)),
+            );
     }
 }
 

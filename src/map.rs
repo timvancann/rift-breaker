@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::{components::MainCamera, player::Player};
+use crate::{components::MainCamera};
 
 const TILE_SIZE: TilemapTileSize = TilemapTileSize { x: 32.0, y: 32.0 };
 const CHUNK_SIZE: UVec2 = UVec2 { x: 16, y: 16 };

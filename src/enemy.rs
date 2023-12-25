@@ -2,12 +2,13 @@ use bevy::math::vec2;
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 use rand::{thread_rng, Rng};
 
+use crate::components::XpGem;
+use crate::resources::AppState::InGame;
 use crate::{
     components::{Collider, Health, Knockback, Movable, Velocity},
     player::{Bullet, Player},
     ui::Score,
 };
-use crate::components::XpGem;
 
 const ENEMY_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const ENEMY_HEALTH: f32 = 2.;
@@ -24,9 +25,10 @@ impl Plugin for EnemyPlugin {
                 move_towards_player_when_not_knockback,
                 die,
                 despawn_far_away_enemies,
-            ),
+            )
+                .run_if(in_state(InGame)),
         )
-            .add_systems(FixedUpdate, bullet_hit_enemy);
+        .add_systems(FixedUpdate, bullet_hit_enemy.run_if(in_state(InGame)));
     }
 }
 
@@ -35,7 +37,6 @@ pub struct Enemy;
 
 #[derive(Component)]
 struct XpValue(f32);
-
 
 #[derive(Bundle)]
 pub struct EnemyBundle {
@@ -130,7 +131,7 @@ fn move_towards_player_when_not_knockback(
         let player_transform = q_player.single();
         let direction = (player_transform.translation.truncate()
             - enemy_transform.translation.truncate())
-            .normalize();
+        .normalize();
         velocity.0 = direction * movable.move_speed;
     }
 }

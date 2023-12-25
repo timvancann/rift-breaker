@@ -2,12 +2,14 @@ use std::time::Duration;
 
 use bevy::{math::vec3, prelude::*, sprite::collide_aabb::collide};
 
+use crate::components::XpGem;
+use crate::events::{PlayerDies, PlayerHealthChanged};
+use crate::resources::AppState::InGame;
+use crate::resources::XP;
 use crate::{
     components::{Collider, Health, MouseWorldCoords, Movable, Velocity},
     enemy::Enemy,
 };
-use crate::components::XpGem;
-use crate::resources::XP;
 
 const PLAYER_SIZE: Vec2 = Vec2::new(50.0, 50.0);
 const PLAYER_COLOR: Color = Color::YELLOW_GREEN;
@@ -56,8 +58,11 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_player)
-            .add_systems(FixedUpdate, (rotate_around_player, enemy_hits_player))
+        app.add_systems(OnEnter(InGame), setup_player)
+            .add_systems(
+                FixedUpdate,
+                (rotate_around_player, enemy_hits_player).run_if(in_state(InGame)),
+            )
             .add_systems(
                 Update,
                 (
@@ -65,8 +70,9 @@ impl Plugin for PlayerPlugin {
                     fire,
                     despawn_bullets,
                     countdown_invulnerability,
-                    pickup_xp_gem
-                ),
+                    pickup_xp_gem,
+                )
+                    .run_if(in_state(InGame)),
             );
     }
 }
@@ -254,12 +260,6 @@ fn countdown_invulnerability(
     }
 }
 
-#[derive(Event)]
-pub struct PlayerHealthChanged {
-    pub current: f32,
-    pub max: f32,
-}
-
 fn enemy_hits_player(
     mut commands: Commands,
     mut q_player: Query<
@@ -268,6 +268,7 @@ fn enemy_hits_player(
     >,
     q_enemy: Query<(&Transform, &Collider), With<Enemy>>,
     mut ev_player_health: EventWriter<PlayerHealthChanged>,
+    mut ev_player_dies: EventWriter<PlayerDies>,
 ) {
     for (player_transform, player_collider, mut player_health, entity) in q_player.iter_mut() {
         for (enemy_transform, enemy_collider) in q_enemy.iter() {
@@ -285,6 +286,10 @@ fn enemy_hits_player(
                 commands.entity(entity).insert(Invulnerable {
                     timer: Timer::new(Duration::from_secs(1), TimerMode::Once),
                 });
+                if player_health.current <= 0. {
+                    ev_player_dies.send(PlayerDies);
+                }
+
                 return;
             }
         }
